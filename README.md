@@ -3,11 +3,11 @@
 
 ## Abstract
 
-This repository contains a non-commercial, open-source prototype of an open framework for aggregating human distress indicators, producing the Composite Distress Score (CDS)—a single composite score unifying existing indicators (e.g., hunger, inequality, conflict, governance) for crisis tracking and early warning. The CDS uses established composite index methods in a transparent, flexible, and action-oriented way, without introducing new mathematical operations. This prototype is offered to researchers, humanitarian organizations, and developers as a basis for further exploration.
+This repository contains a non-commercial, open-source prototype of an open framework for aggregating human distress indicators, producing the Composite Distress Score (CDS) - a single composite score unifying existing indicators (e.g., hunger, inequality, conflict, governance) for crisis tracking and early warning. The CDS uses established composite index methods in a transparent, flexible, and action-oriented way, without introducing new mathematical operations. This prototype is offered to researchers, humanitarian organizations, and developers as a basis for further exploration.
 
 ## Why This Exists
 
-The world tracks hunger, conflict, and inequality—but rarely in one place, and rarely in a way that surfaces who needs help most, right now. While existing indices measure specific dimensions (e.g., inequality or governance), the CDS seeks to capture how these compound into real-world distress. This prototype shows how existing metrics (e.g., Gini coefficient, conflict deaths, displacement) can be normalized and combined into a Composite Distress Score (CDS). It’s not a solution. It’s a tool for thought—and an invitation for others to build something better. If it helps someone prioritize care where it’s most needed, it’s done its job.
+The world tracks hunger, conflict, and inequality—but rarely in one place, and rarely in a way that surfaces who needs help most, right now. While existing indices measure specific dimensions (e.g., inequality or governance), the CDS seeks to capture how these compound into real-world distress. This prototype shows how existing metrics (e.g., Gini coefficient, conflict deaths, displacement) can be normalized and combined into a Composite Distress Score (CDS). It’s not a solution. It’s a tool for thought and an invitation for others to build something better. If it helps someone prioritize care where it’s most needed, it’s done its job.
 
 ## What Is the CDS?
 
