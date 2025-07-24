@@ -103,7 +103,7 @@ Synergy Initiative. (2025). An Open Framework for Aggregating Human Distress Ind
 This helps maintain transparency and supports collaborative development.
 
 ## Repository Structure
-Planed Python Structure(not implemented yet):
+Planned Python Structure (not implemented yet):
 - `cds_core.py`: Core module for calculating the CDS.
 - `examples/`: Sample datasets and usage scripts.
 - `notebooks/`: Jupyter notebooks for prototyping and visualization.
@@ -145,6 +145,4 @@ This project is open-source under a non-commercial license. Contributions are we
 - **Version**: v0.1
 - **DOI**: [TBD, to be updated after Zenodo publication]
 
----
 
-*Created: July 20, 2025*
