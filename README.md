@@ -1,13 +1,16 @@
+GitHub Readme 
 
 # An Open Framework for Aggregating Human Distress Indicators
 
 ## Abstract
 
-This repository contains a non-commercial, open-source prototype of an open framework for aggregating human distress indicators, producing the Composite Distress Score (CDS) - a single composite score unifying existing indicators (e.g., hunger, inequality, conflict, governance) for crisis tracking and early warning. The CDS uses established composite index methods in a transparent, flexible, and action-oriented way, without introducing new mathematical operations. This prototype is offered to researchers, humanitarian organizations, and developers as a basis for further exploration.
+This repository contains a non-commercial, open-source prototype of an open framework for aggregating human distress indicators, producing the Composite Distress Score (CDS)—a single composite score unifying existing indicators (e.g., hunger, inequality, conflict, governance) for crisis tracking and early warning. The CDS uses established composite index methods in a transparent, flexible, and action-oriented way, without introducing new mathematical operations. This prototype is offered to researchers, humanitarian organizations, and developers as a basis for further exploration.
 
 ## Why This Exists
 
-The world tracks hunger, conflict, and inequality—but rarely in one place, and rarely in a way that surfaces who needs help most, right now. While existing indices measure specific dimensions (e.g., inequality or governance), the CDS seeks to capture how these compound into real-world distress. This prototype shows how existing metrics (e.g., Gini coefficient, conflict deaths, displacement) can be normalized and combined into a Composite Distress Score (CDS). It’s not a solution. It’s a tool for thought and an invitation for others to build something better. If it helps someone prioritize care where it’s most needed, it’s done its job.
+The world tracks hunger, conflict, and inequality but rarely in one place, and rarely in a way that surfaces who needs help most, right now. While existing indices measure specific dimensions (e.g., inequality or governance), the CDS seeks to capture how these compound into real-world distress. This prototype shows how existing metrics (e.g., Gini coefficient, conflict deaths, displacement) can be normalized and combined into a Composite Distress Score (CDS). It’s not a solution. It’s a tool for thought and an invitation for others to build something better. If it helps someone prioritize care where it’s most needed, it’s done its job.
+
+This framework builds entirely on publicly available indicators from trusted sources like the United Nations, World Bank, Freedom House, and others. The CDS does not aim to replace these datasets but aggregates them to highlight systemic distress in an actionable way, encouraging users to engage with the original data for deeper analysis. It’s a humble signal aggregator, designed to complement existing metrics and support rapid, informed responses.
 
 ## What Is the CDS?
 
@@ -65,6 +68,14 @@ The static CDS uses fixed weights, which may not capture dynamic crises (e.g., s
 
 Where \( \eta \geq 0 \) is a learning rate. This formulation draws inspiration from learning-rate-style updates in adaptive systems but is untested and included as an illustrative concept for future exploration.
 
+### CDS as an Alert and Diagnostic Tool
+
+The CDS works in two stages to support crisis awareness:
+- **Alert**: A high CDS score (close to 1) flags regions or populations under significant distress, acting as a quick triage signal.
+- **Diagnostic**: The individual indicator scores (e.g., hunger, conflict) show what’s driving the distress, pointing to possible areas for intervention.
+
+This approach aims to help users quickly spot crises and understand their causes without replacing detailed analysis or local expertise. It’s a starting point for prioritizing action.
+
 ## Possible Uses
 
 The CDS could support:
@@ -83,12 +94,21 @@ This is a prototype, not a production-ready tool. Scaling it would require robus
 - **Manipulation Risk**: Scores tied to aid could incentivize data falsification. Multi-source validation is recommended.
 - **Scope**: The CDS measures systemic distress, not individual experiences.
 
-## Repository Structure
+## Usage and Attribution
 
+If you fork or modify this project, please include a link to this repository (https://github.com/SynergyMetrics/CDS) and acknowledge the original authors (Synergy Initiative or “the CDS authors”) in your work. Suggested citation:
+
+Synergy Initiative. (2025). An Open Framework for Aggregating Human Distress Indicators (Version v0.1). Zenodo. DOI: [TBD]. GitHub: https://github.com/SynergyMetrics/CDS
+
+This helps maintain transparency and supports collaborative development.
+
+## Repository Structure
+Planed Python Structure(not implemented yet):
 - `cds_core.py`: Core module for calculating the CDS.
 - `examples/`: Sample datasets and usage scripts.
 - `notebooks/`: Jupyter notebooks for prototyping and visualization.
 - `docs/`: Additional documentation in Markdown or LaTeX.
+- `demo/`: Demo app showcasing CDS functionality (built with React, may be implemented in other languages like Python).
 
 ## Future Possibilities
 
@@ -108,18 +128,22 @@ This project is open-source under a non-commercial license. Contributions are we
 
 ## References
 
-- Nardo, M., Saisana, M., Saltelli, A., & Tarantola, S. (2005). *Composite indicators: A methodological handbook*. European Commission.
-- OECD. (2008). *Handbook on constructing composite indicators*. OECD Publishing.
+- Nardo, M., Saisana, M., Saltelli, A., & Tarantola, S. (2005). *Composite Indicators: A Methodological Handbook*. European Commission.
+- OECD. (2008). *Handbook on Constructing Composite Indicators*. OECD Publishing.
 - Saaty, T. L. (1980). *The Analytic Hierarchy Process*. McGraw-Hill.
 - Keeney, R. L., & Raiffa, H. (1993). *Decisions with Multiple Objectives: Preferences and Value Tradeoffs*. Cambridge University Press.
-- Data sources: World Bank, Freedom House, UNDP, UNHCR (to be specified).
+- Data sources: United Nations, World Bank, Freedom House, UNHCR (to be specified).
 
 ## Notes
 
-- **Authors**: SynergyMetrics Initiative
-- **License**: Non-commercial, open-source (specify license, e.g., CC BY-NC 4.0).
-- **Contact**: Add your preferred contact or GitHub issue tracker.
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+
+- **Authors**: Synergy Initiative
+- **License**: CC BY-NC 4.0 (Creative Commons Attribution-NonCommercial 4.0 International).
+- **Rights Transfer**: The authorship and rights for this project are currently held by Synergy Initiative but may be transferred or updated to include individual author names in the future.
+- **Contact**: https://github.com/SynergyMetrics/CDS/issues
 - **Version**: v0.1
+- **DOI**: [TBD, to be updated after Zenodo publication]
 
 ---
 
