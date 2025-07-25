@@ -8,127 +8,126 @@ const App = () => {
     const [indicatorValues, setIndicatorValues] = useState({
         hunger: 2500, // Caloric intake per capita (0-4000 kcal/day)
         inequality: 40, // Gini index (0-100)
-        conflict: 10, // Deaths per 100,000
-        displacement: 200, // IDPs + refugees per 100,000
+        conflict: '', // Deaths per 100,000
+        displacement: '', // IDPs + refugees per 100,000
         governance: 50, // Freedom House Score (0-100)
         suicide: 5, // Suicides per 100,000
     });
-
-    // State to store the normalized scores for each indicator
-    const [normalizedScores, setNormalizedScores] = useState({});
-    // State to store the final Composite Distress Score (CDS)
-    const [cdsScore, setCdsScore] = useState(null);
-    // State to store the AI's interpretation of the CDS
-    const [aiInterpretation, setAiInterpretation] = useState('');
-    // State to manage the loading status of the AI interpretation
-    const [isLoadingAI, setIsLoadingAI] = useState(false);
-    // State to store any error messages
-    const [error, setError] = useState('');
 
     // Define the indicators and their properties for easier rendering and calculation
     const indicators = [
         { id: 'hunger', name: 'Hunger (Caloric Intake)', unit: 'kcal/day', min: 0, max: 4000, placeholder: 'e.g., 2500' },
         { id: 'inequality', name: 'Inequality (Gini Index)', unit: '', min: 0, max: 100, placeholder: 'e.g., 40' },
-        { id: 'conflict', name: 'Conflict Deaths', unit: 'per 100k', min: 0, max: 50, placeholder: 'e.g., 10' },
-        { id: 'displacement', name: 'Displacement', unit: 'per 100k', min: 0, max: 1000, placeholder: 'e.g., 200' },
+        { id: 'conflict', name: 'Conflict Deaths', unit: 'per 100k', min: 0, max: 100000, placeholder: 'e.g., 10' },
+        { id: 'displacement', name: 'Displacement', unit: 'per 100k', min: 0, max: 100000, placeholder: 'e.g., 200' },
         { id: 'governance', name: 'Governance (Freedom House Score)', unit: '', min: 0, max: 100, placeholder: 'e.g., 50' },
-        { id: 'suicide', name: 'Mental Health (Suicides)', unit: 'per 100k', min: 0, max: 30, placeholder: 'e.g., 5' },
+        { id: 'suicide', name: 'Mental Health (Suicides)', unit: 'per 100k', min: 0, max: 100, placeholder: 'e.g., 5' },
     ];
+
+    // Initialize weights equally for all indicators
+    const initialWeights = {};
+    indicators.forEach(indicator => {
+        initialWeights[indicator.id] = 1 / indicators.length;
+    });
+
+    const [weights, setWeights] = useState(initialWeights);
+    const [normalizedScores, setNormalizedScores] = useState({});
+    const [cdsScore, setCdsScore] = useState(null);
+    const [aiInterpretation, setAiInterpretation] = useState('');
+    const [isLoadingAI, setIsLoadingAI] = useState(false);
+    const [error, setError] = useState('');
+
+    // Learning rate for dynamic weighting
+    const eta = 0.1;
 
     // Function to normalize an individual indicator's value based on its type
     const normalizeIndicator = (value, id) => {
         let score = 0;
         switch (id) {
             case 'hunger':
-                // s_hunger(r,t) = 1 - (caloric intake per capita / 4000)
                 score = 1 - (value / 4000);
                 break;
             case 'inequality':
-                // s_inequality(r,t) = Gini index / 100
                 score = value / 100;
                 break;
             case 'conflict':
-                // s_conflict(r,t) = min(1, deaths per 100,000 / 50)
-                score = Math.min(1, value / 50);
+                score = Math.min(1, value / 100000);
                 break;
             case 'displacement':
-                // s_displacement(r,t) = min(1, IDPs + refugees per 100,000 / 1000)
-                score = Math.min(1, value / 1000);
+                score = Math.min(1, value / 100000);
                 break;
             case 'governance':
-                // s_governance(r,t) = 1 - (Freedom House Score / 100)
                 score = 1 - (value / 100);
                 break;
             case 'suicide':
-                // s_suicide(r,t) = min(1, suicides per 100,000 / 30)
-                score = Math.min(1, value / 30);
+                score = Math.min(1, value / 100);
                 break;
             default:
                 score = 0;
         }
-        // Ensure the score is within the [0, 1] range
         return Math.max(0, Math.min(1, score));
     };
 
     // Function to handle changes in the input fields
     const handleInputChange = (e) => {
         const { id, value } = e.target;
-        setIndicatorValues(prev => ({
-            ...prev,
-            [id]: parseFloat(value) || 0 // Convert input value to a float, default to 0 if NaN
-        }));
+        if (value === '' || /^(0|[1-9][0-9]*)$/.test(value)) {
+            setIndicatorValues(prev => ({
+                ...prev,
+                [id]: value
+            }));
+        }
     };
 
     // Function to calculate the CDS and fetch AI interpretation
     const calculateAndInterpret = async () => {
-        setError(''); // Clear previous errors
-        setIsLoadingAI(true); // Set loading state for AI
+        setError('');
+        setIsLoadingAI(true);
 
         const currentNormalizedScores = {};
-        let totalCds = 0;
-        const numIndicators = indicators.length;
-        const equalWeight = 1 / numIndicators; // Using equal weighting for this prototype
+        let sumWeightedScores = 0;
+        let sumOfNewWeights = 0;
+        const newWeights = { ...weights }; // Start with current weights
 
-        // Normalize each indicator and sum them up for CDS calculation
+        // Step 1: Calculate normalized scores and new unnormalized weights
         indicators.forEach(indicator => {
-            const value = indicatorValues[indicator.id];
+            const value = indicatorValues[indicator.id] === '' ? 0 : Number(indicatorValues[indicator.id]);
             const normalized = normalizeIndicator(value, indicator.id);
             currentNormalizedScores[indicator.id] = normalized;
-            totalCds += normalized * equalWeight;
+
+            // Calculate new unnormalized weight for this indicator
+            const currentWeight = weights[indicator.id];
+            const unnormalizedNewWeight = currentWeight + eta * normalized;
+            newWeights[indicator.id] = unnormalizedNewWeight; // Temporarily store unnormalized weight
+            sumOfNewWeights += unnormalizedNewWeight;
+        });
+
+        // Step 2: Normalize the new weights and calculate weighted sum for CDS
+        indicators.forEach(indicator => {
+            const normalizedWeight = newWeights[indicator.id] / sumOfNewWeights;
+            newWeights[indicator.id] = normalizedWeight; // Store normalized weight
+            sumWeightedScores += currentNormalizedScores[indicator.id] * normalizedWeight;
         });
 
         setNormalizedScores(currentNormalizedScores);
-        setCdsScore(totalCds);
+        setWeights(newWeights); // Update weights state
+        setCdsScore(sumWeightedScores);
 
-        // Prepare prompt for AI interpretation
-        const prompt = `Interpret the following Composite Distress Score (CDS) which ranges from 0 (minimal distress) to 1 (maximal distress). 
-                        The score is ${totalCds.toFixed(3)}. 
-                        This score is derived from indicators like hunger, inequality, conflict, displacement, governance, and mental health.
-                        Provide a concise interpretation of what this score signifies regarding human distress in a region.`;
-
-        try {
-            // For this prototype, we'll provide a simple interpretation based on score ranges
-            let interpretation = '';
-            if (totalCds < 0.2) {
-                interpretation = `With a CDS of ${totalCds.toFixed(3)}, this region shows minimal distress levels. The indicators suggest relatively stable conditions with low conflict, adequate nutrition, reasonable governance, and manageable displacement. This represents a favorable situation for human wellbeing.`;
-            } else if (totalCds < 0.4) {
-                interpretation = `A CDS of ${totalCds.toFixed(3)} indicates low to moderate distress. While the situation is generally manageable, there may be emerging concerns in some indicators that warrant monitoring. Preventive measures could help maintain stability.`;
-            } else if (totalCds < 0.6) {
-                interpretation = `This CDS of ${totalCds.toFixed(3)} reflects moderate distress levels. The region is experiencing notable challenges across multiple indicators. This suggests the need for targeted interventions to address specific areas of concern before conditions worsen.`;
-            } else if (totalCds < 0.8) {
-                interpretation = `With a CDS of ${totalCds.toFixed(3)}, this region shows high distress levels. Multiple indicators are signaling serious challenges that require immediate attention. Humanitarian assistance and policy interventions are likely needed to prevent further deterioration.`;
-            } else {
-                interpretation = `A CDS of ${totalCds.toFixed(3)} indicates severe distress. This represents a crisis situation with multiple indicators showing critical levels. Urgent humanitarian intervention, international assistance, and comprehensive crisis response measures are essential.`;
-            }
-            
-            setAiInterpretation(interpretation);
-        } catch (err) {
-            console.error("Error generating interpretation:", err);
-            setError("Failed to generate interpretation. Please try again.");
-            setAiInterpretation('');
-        } finally {
-            setIsLoadingAI(false); // End loading state
+        // Interpretation logic remains the same
+        let interpretation = '';
+        if (sumWeightedScores < 0.2) {
+            interpretation = `With a CDS of ${sumWeightedScores.toFixed(3)}, this region shows minimal distress levels. The indicators suggest relatively stable conditions with low conflict, adequate nutrition, reasonable governance, and manageable displacement. This represents a favorable situation for human wellbeing.`;
+        } else if (sumWeightedScores < 0.4) {
+            interpretation = `A CDS of ${sumWeightedScores.toFixed(3)} indicates low to moderate distress. While the situation is generally manageable, there may be emerging concerns in some indicators that warrant monitoring. Preventive measures could help maintain stability.`;
+        } else if (sumWeightedScores < 0.6) {
+            interpretation = `This CDS of ${sumWeightedScores.toFixed(3)} reflects moderate distress levels. The region is experiencing notable challenges across multiple indicators. This suggests the need for targeted interventions to address specific areas of concern before conditions worsen.`;
+        } else if (sumWeightedScores < 0.8) {
+            interpretation = `With a CDS of ${sumWeightedScores.toFixed(3)}, this region shows high distress levels. Multiple indicators are signaling serious challenges that require immediate attention. Humanitarian assistance and policy interventions are likely needed to prevent further deterioration.`;
+        } else {
+            interpretation = `A CDS of ${sumWeightedScores.toFixed(3)} indicates severe distress. This represents a crisis situation with multiple indicators showing critical levels. Urgent humanitarian intervention, international assistance, and comprehensive crisis response measures are essential.`;
         }
+        setAiInterpretation(interpretation);
+        setIsLoadingAI(false);
     };
 
     // Automatically calculate CDS and interpret on initial load and when indicator values change
@@ -233,4 +232,3 @@ const App = () => {
 };
 
 export default App;
-
