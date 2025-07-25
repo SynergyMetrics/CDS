@@ -38,7 +38,7 @@ const App = () => {
     const [error, setError] = useState('');
 
     // Learning rate for dynamic weighting
-    const eta = 0.1;
+    const eta = 0.01;
 
     // Function to normalize an individual indicator's value based on its type
     const normalizeIndicator = (value, id) => {
