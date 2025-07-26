@@ -40,6 +40,21 @@ const App = () => {
     // Learning rate for dynamic weighting
     const eta = 0.01;
 
+    // Softmax function to normalize weights into a probability distribution
+    const softmax = (values) => {
+        // Find the maximum value to prevent overflow
+        const maxValue = Math.max(...values);
+        
+        // Subtract max value from each element and compute exponentials
+        const exponentials = values.map(value => Math.exp(value - maxValue));
+        
+        // Calculate the sum of exponentials
+        const sumExponentials = exponentials.reduce((sum, exp) => sum + exp, 0);
+        
+        // Normalize by dividing each exponential by the sum
+        return exponentials.map(exp => exp / sumExponentials);
+    };
+
     // Function to normalize an individual indicator's value based on its type
     const normalizeIndicator = (value, id) => {
         let score = 0;
@@ -86,31 +101,35 @@ const App = () => {
 
         const currentNormalizedScores = {};
         let sumWeightedScores = 0;
-        let sumOfNewWeights = 0;
-        const newWeights = { ...weights }; // Start with current weights
+        const rawWeights = []; // Array to store raw weight values for softmax
+        const weightKeys = []; // Array to maintain order of indicators
 
-        // Step 1: Calculate normalized scores and new unnormalized weights
+        // Step 1: Calculate normalized scores and raw weights
         indicators.forEach(indicator => {
             const value = indicatorValues[indicator.id] === '' ? 0 : Number(indicatorValues[indicator.id]);
             const normalized = normalizeIndicator(value, indicator.id);
             currentNormalizedScores[indicator.id] = normalized;
 
-            // Calculate new unnormalized weight for this indicator
+            // Calculate raw weight for this indicator using gradient-based update
             const currentWeight = weights[indicator.id];
-            const unnormalizedNewWeight = currentWeight + eta * normalized;
-            newWeights[indicator.id] = unnormalizedNewWeight; // Temporarily store unnormalized weight
-            sumOfNewWeights += unnormalizedNewWeight;
+            const rawWeight = currentWeight + eta * normalized;
+            
+            rawWeights.push(rawWeight);
+            weightKeys.push(indicator.id);
         });
 
-        // Step 2: Normalize the new weights and calculate weighted sum for CDS
-        indicators.forEach(indicator => {
-            const normalizedWeight = newWeights[indicator.id] / sumOfNewWeights;
-            newWeights[indicator.id] = normalizedWeight; // Store normalized weight
-            sumWeightedScores += currentNormalizedScores[indicator.id] * normalizedWeight;
+        // Step 2: Apply softmax to normalize weights into a probability distribution
+        const softmaxWeights = softmax(rawWeights);
+        const newWeights = {};
+        
+        // Step 3: Map softmax weights back to indicators and calculate weighted sum
+        weightKeys.forEach((key, index) => {
+            newWeights[key] = softmaxWeights[index];
+            sumWeightedScores += currentNormalizedScores[key] * softmaxWeights[index];
         });
 
         setNormalizedScores(currentNormalizedScores);
-        setWeights(newWeights); // Update weights state
+        setWeights(newWeights); // Update weights state with softmax-normalized values
         setCdsScore(sumWeightedScores);
 
         // Interpretation logic remains the same
@@ -144,6 +163,8 @@ const App = () => {
                 <p className="text-center text-gray-600 mb-8 leading-relaxed">
                     This interactive prototype demonstrates the calculation of the Composite Distress Score (CDS)
                     based on synthetic indicator values. It provides an interpretation of the score to help understand regional distress levels.
+                    <br />
+                    <span className="text-sm font-medium text-blue-600">Now featuring softmax-normalized dynamic weighting for improved probability distribution.</span>
                 </p>
 
                 {/* Input Section */}
@@ -179,9 +200,27 @@ const App = () => {
                     </Button>
                 </div>
 
+                {/* Weights Display Section */}
+                <div className="mb-8 p-4 sm:p-6 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <h2 className="text-2xl font-bold text-yellow-800 mb-4">2. Dynamic Weights (Softmax Normalized)</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {indicators.map(indicator => (
+                            <div key={`weight-${indicator.id}`} className="bg-white p-3 rounded-md shadow-sm border border-gray-200">
+                                <p className="text-sm font-medium text-gray-700">{indicator.name}:</p>
+                                <p className="text-lg font-semibold text-yellow-700">
+                                    {weights[indicator.id] !== undefined ? (weights[indicator.id] * 100).toFixed(1) + '%' : 'N/A'}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-4 text-sm text-gray-600">
+                        <p>Weights are dynamically adjusted based on indicator values and normalized using softmax to ensure they sum to 100%.</p>
+                    </div>
+                </div>
+
                 {/* Calculated Scores Section */}
                 <div className="mb-8 p-4 sm:p-6 bg-green-50 rounded-lg border border-green-200">
-                    <h2 className="text-2xl font-bold text-green-800 mb-4">2. Calculated Scores</h2>
+                    <h2 className="text-2xl font-bold text-green-800 mb-4">3. Calculated Scores</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         {indicators.map(indicator => (
                             <div key={`normalized-${indicator.id}`} className="bg-white p-3 rounded-md shadow-sm border border-gray-200">
@@ -205,7 +244,7 @@ const App = () => {
 
                 {/* AI Interpretation Section */}
                 <div className="p-4 sm:p-6 bg-purple-50 rounded-lg border border-purple-200">
-                    <h2 className="text-2xl font-bold text-purple-800 mb-4">3. Score Interpretation</h2>
+                    <h2 className="text-2xl font-bold text-purple-800 mb-4">4. Score Interpretation</h2>
                     {isLoadingAI ? (
                         <div className="flex items-center justify-center py-8">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-purple-500"></div>
@@ -225,6 +264,7 @@ const App = () => {
                     <p>This is a prototype for demonstration purposes and uses synthetic data.</p>
                     <p>It is not intended for real-world crisis tracking without further development and validation.</p>
                     <p className="mt-2">Based on the open framework by SynergyMetrics Initiative</p>
+                    <p className="mt-1 text-blue-600 font-medium">Enhanced with softmax normalization for dynamic weight distribution</p>
                 </div>
             </div>
         </div>
@@ -232,3 +272,4 @@ const App = () => {
 };
 
 export default App;
+
